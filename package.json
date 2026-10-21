@@ -1,0 +1,8 @@
+{
+  "name": "radar-vinhera",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"start": "bun run index.ts"},
+  "engines": {"bun": ">=1.1.0"}
+}
