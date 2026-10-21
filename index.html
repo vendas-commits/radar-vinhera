@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar Vinhera | Vinhera e VinhoBR</title>
+<style>
+:root{font-family:system-ui,-apple-system,Arial;color:#17372d;background:#f4f5f0}
+*{box-sizing:border-box}body{margin:0}header{background:#123b30;color:#fff;padding:24px max(20px,calc((100% - 1160px)/2))}
+header h1{font-family:Georgia,serif;font-size:32px;margin:0}header p{color:#d4e3da;margin:8px 0 0}
+main{max-width:1160px;margin:auto;padding:20px}section{background:#fff;border:1px solid #e0e6df;border-radius:15px;padding:20px;margin:15px 0}
+h2{font-size:20px;margin:0 0 10px}.muted{color:#60756b;font-size:13px;line-height:1.5}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+button{cursor:pointer;border:0;background:#174d3b;color:#fff;border-radius:9px;padding:11px 15px;font:inherit}
+.tabs button{padding:17px;font-weight:700;font-size:17px;background:#e0e8e2;color:#204333}
+.tabs button.active{background:#174d3b;color:#fff}.pane{display:none}.pane.active{display:block}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.metric{padding:16px;background:#eff4ef;border-radius:10px}.metric strong{font-size:25px;display:block}
+.metric span{font-size:12px;color:#50665a}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}
+label{display:block;font-weight:600;font-size:13px;margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid #bccac0;border-radius:8px;background:#fff;font:inherit}
+input[type=file]{font-size:13px}.tablewrap{overflow:auto;max-height:570px}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:10px;border-bottom:1px solid #e3eae5;text-align:left;white-space:nowrap}th{background:#edf2ed;position:sticky;top:0}
+tr:hover{background:#f7f9f6}.notice{background:#f9f4e6;border-left:3px solid #bd9c55;padding:12px;border-radius:6px;font-size:13px}
+.badge{background:#e8efe9;padding:4px 7px;border-radius:20px;font-size:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row>*{flex:1}
+@media(max-width:600px){header h1{font-size:26px}main{padding:12px}section{padding:15px}th,td{padding:8px}.tabs button{font-size:15px}}
+</style>
+</head>
+<body>
+<header><h1>🍷 Radar Vinhera</h1><p>Inteligência comercial para duas operações, com importadoras compartilhadas</p></header>
+<main>
+<div class="tabs" role="tablist">
+<button class="active" id="tab-vinhera" onclick="setBusiness('vinhera')" role="tab" aria-selected="true">VINHERA</button>
+<button id="tab-vinhobr" onclick="setBusiness('vinhobr')" role="tab" aria-selected="false">VINHOBR</button>
+</div>
+<div class="notice">Cada empresa usa exclusivamente seus próprios produtos, preços e custos. A base de importadoras é comum. Não há transferência automática de custos entre Vinhera e VinhoBR.</div>
+<section><h2>Painel <span id="business-title">Vinhera</span></h2>
+<div class="metrics">
+<div class="metric"><span>Produtos desta empresa</span><strong id="products-count">0</strong></div>
+<div class="metric"><span>Ofertas de importadoras</span><strong id="offers-count">0</strong></div>
+<div class="metric"><span>Correspondências exatas sugeridas</span><strong id="matches-count">0</strong></div>
+<div class="metric"><span>Última atualização</span><strong id="updated" style="font-size:15px">Não informado</strong></div>
+</div><p class="muted">Tabelas antigas continuam disponíveis. As recomendações são provisórias e os nomes correspondentes não são tratados como vínculos confirmados.</p></section>
+<div id="pane-vinhera" class="pane active">
+<section><h2>Catálogo Vinhera</h2><p class="muted">Importe o CSV de produtos Vinhera. O custo será usado apenas quando estiver presente na própria tabela Vinhera.</p>
+<input id="catalog-file" type="file" accept=".csv,text/csv"><p id="catalog-status" class="muted"></p></section>
+<section><h2>Produtos Vinhera</h2>
+<input id="search-vinhera" placeholder="Buscar por nome ou SKU" oninput="render()">
+<p id="vinhera-summary" class="muted"></p><div id="vinhera-table" class="tablewrap"></div></section>
+</div>
+<div id="pane-vinhobr" class="pane">
+<section><h2>Base VinhoBR</h2><p class="muted">CSV com SKU, nome, custo final, preço de venda e estoque. O custo final já inclui impostos.</p>
+<input id="cost-file" type="file" accept=".csv,text/csv"><p id="cost-status" class="muted"></p></section>
+<section><h2>Produtos VinhoBR</h2><input id="search-vinhobr" placeholder="Buscar por nome ou SKU" oninput="render()">
+<p id="vinhobr-summary" class="muted"></p><div id="vinhobr-table" class="tablewrap"></div></section>
+</div>
+<section><h2>Importadoras compartilhadas</h2>
+<div class="controls"><div><label>Nome da importadora</label><input id="supplier" value="Ventus Prime"></div>
+<div><label>Importar ofertas em CSV</label><input id="offer-file" type="file" accept=".csv,text/csv"></div></div>
+<p class="muted">A tabela importada fica disponível nas duas abas. Este envio acrescenta linhas à base atual; não substitui as importadoras anteriores.</p>
+<p id="offer-status" class="muted"></p></section>
+<section><h2>Oportunidades para <span id="analysis-title">Vinhera</span></h2>
+<div class="controls">
+<div><label>Buscar vinho / importadora</label><input id="search-offer" placeholder="Nome do vinho ou fornecedor" oninput="render()"></div>
+<div><label>Importadora</label><select id="supplier-filter" onchange="render()"><option value="">Todas</option></select></div>
+<div><label>Comparação com a empresa</label><select id="match-filter" onchange="render()"><option value="all">Todas as ofertas</option><option value="match">Nome exatamente compatível</option><option value="new">Sem correspondência exata</option></select></div>
+</div>
+<p class="muted">Preço sugerido: cartão = custo × 1,6 + R$ 20; Pix = cartão × 0,9. Safras anteriores a 2018 exigem igualdade. Identidade de rótulos não é confirmada automaticamente.</p>
+<button id="export" onclick="exportCSV()">Exportar análise desta empresa (CSV)</button>
+<p id="offer-summary" class="muted"></p><div id="offer-table" class="tablewrap"></div>
+</section>
+</main>
+<script>
+let catalog=[],costs=[],offers=[],active='vinhera',updated='Não informado';
+const $=id=>document.getElementById(id);
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\b(19|20)\d{2}\b/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\b(vinho|tinto|branco|seco|750ml|750|ml)\b/g,' ').replace(/\s+/g,' ').trim();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+function field(o,keys){if(!o)return '';const found=Object.keys(o).find(k=>keys.some(x=>norm(k).includes(norm(x))));return found?o[found]:''}
+function wineName(o){return field(o,['nome','descricao','descri','produto','vinho','title'])}
+function sku(o){return field(o,['sku','codigo','id'])}
+function number(v){let s=String(v??'').replace(/[^\d,.]/g,'');if(!s)return NaN;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');return Number(s)}
+function brl(n){return Number.isFinite(n)?n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'Não informado'}
+function vintage(o){let v=String(wineName(o)+' '+field(o,['safra'])).match(/\b(?:19|20)\d{2}\b/);return v?Number(v[0]):null}
+function company(){return active==='vinhera'?catalog:costs}
+function companyName(){return active==='vinhera'?'Vinhera':'VinhoBR'}
+function companyCost(o){return active==='vinhera'?number(field(o,['custo_final','custo final','preco_custo','custo de compra','custo'])):number(field(o,['custo_final','custo final','custo']))}
+function offerCost(o){return number(field(o,['custo_unitario','custo final','com ipi','c/ ipi','preco','preço','custo','valor unit']))}
+function compatible(o,p){let a=norm(wineName(o)),b=norm(wineName(p));if(!a||a!==b)return false;let y=vintage(o),z=vintage(p);return !((y&&y<=2017)||(z&&z<=2017))||Boolean(y&&z&&y===z)}
+function exactMatch(o){return company().find(p=>compatible(o,p))||null}
+function setBusiness(which){active=which;for(const b of ['vinhera','vinhobr']){$('tab-'+b).classList.toggle('active',b===which);$('tab-'+b).setAttribute('aria-selected',String(b===which));$('pane-'+b).classList.toggle('active',b===which)}render()}
+function parseCSV(s){s=s.replace(/^\uFEFF/,'');const head=s.split(/\r?\n/,1)[0],sep=(head.match(/;/g)||[]).length>(head.match(/,/g)||[]).length?';':',';let rows=[],r=[],v='',quoted=false;for(let i=0;i<s.length;i++){let c=s[i];if(c==='"'){if(quoted&&s[i+1]==='"'){v+='"';i++}else quoted=!quoted}else if(c===sep&&!quoted){r.push(v);v=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&s[i+1]==='\n')i++;r.push(v);if(r.some(x=>x.trim()))rows.push(r);r=[];v=''}else v+=c}if(v||r.length){r.push(v);rows.push(r)}let keys=(rows.shift()||[]).map(x=>x.trim());return rows.map(a=>Object.fromEntries(keys.map((k,i)=>[k,(a[i]||'').trim()])))}
+async function save(key,rows){let r=await fetch('/api/data/'+key,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(rows)});if(!r.ok)throw Error('HTTP '+r.status);updated=new Date().toLocaleString('pt-BR')}
+async function load(){try{let r=await fetch('/api/data');if(!r.ok)throw Error('HTTP '+r.status);let d=await r.json();catalog=d.catalog||[];costs=d.costs||[];offers=d.offers||[];updated=d.updated||'Não informado';$('catalog-status').textContent=catalog.length+' produtos salvos';$('cost-status').textContent=costs.length+' produtos/custos salvos';$('offer-status').textContent=offers.length+' ofertas salvas';render()}catch(e){$('offer-status').textContent='Erro ao carregar dados: '+e.message}}
+function table(headers,rows){return '<table><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(row=>'<tr>'+row.map(v=>'<td>'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+function offersFiltered(){let q=norm($('search-offer').value),sup=$('supplier-filter').value,filter=$('match-filter').value;return offers.filter(o=>(!q||norm(wineName(o)+' '+o.__supplier).includes(q))&&(!sup||o.__supplier===sup)&&(filter==='all'||(filter==='match'?Boolean(exactMatch(o)):!exactMatch(o))))}
+function render(){let rows=company(),cname=companyName();$('business-title').textContent=cname;$('analysis-title').textContent=cname;$('products-count').textContent=rows.length.toLocaleString('pt-BR');$('offers-count').textContent=offers.length.toLocaleString('pt-BR');$('updated').textContent=updated;
+let exact=offers.filter(o=>exactMatch(o)).length;$('matches-count').textContent=exact.toLocaleString('pt-BR');
+for(let b of ['vinhera','vinhobr']){let arr=b==='vinhera'?catalog:costs;let q=norm($('search-'+b).value);let filtered=arr.filter(o=>!q||norm(wineName(o)+' '+sku(o)).includes(q));$(b+'-summary').textContent=filtered.length+' registros encontrados; exibindo até 150.';$(b+'-table').innerHTML=b==='vinhera'?table(['SKU','Produto Vinhera','Preço site','Custo próprio','Estoque'],filtered.slice(0,150).map(o=>[sku(o),wineName(o),field(o,['preco_venda','preco','preço']),field(o,['custo_final','custo final','preco_custo','custo']),field(o,['estoque','quantidade'])])):table(['SKU','Produto VinhoBR','Custo final','Preço de venda','Estoque'],filtered.slice(0,150).map(o=>[sku(o),wineName(o),field(o,['custo_final','custo final']),field(o,['preco_venda','preco venda']),field(o,['estoque','quantidade'])]))}
+let current=$('supplier-filter').value;let suppliers=[...new Set(offers.map(o=>o.__supplier).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));$('supplier-filter').innerHTML='<option value="">Todas</option>'+suppliers.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join('');$('supplier-filter').value=suppliers.includes(current)?current:'';
+let found=offersFiltered();$('offer-summary').textContent=found.length+' ofertas nesta seleção; exibindo até 150.';
+$('offer-table').innerHTML=table(['Vinho','Importadora','Custo oferta','Cartão sugerido','Pix base','Cadastro '+cname],found.slice(0,150).map(o=>{let c=offerCost(o);return [wineName(o),o.__supplier,brl(c),brl(c*1.6+20),brl((c*1.6+20)*.9),exactMatch(o)?'Correspondência de nome, verificar':'Sem correspondência exata']}))}
+$('catalog-file').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let rows=parseCSV(await f.text());if(!rows.length)throw Error('Arquivo sem linhas');await save('catalog',rows);catalog=rows;$('catalog-status').textContent=rows.length+' produtos salvos';render()}catch(err){alert('Erro ao importar Vinhera: '+err.message)}});
+$('cost-file').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let rows=parseCSV(await f.text());if(!rows.length)throw Error('Arquivo sem linhas');await save('costs',rows);costs=rows;$('cost-status').textContent=rows.length+' produtos/custos salvos';render()}catch(err){alert('Erro ao importar VinhoBR: '+err.message)}});
+$('offer-file').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;try{let rows=parseCSV(await f.text());if(!rows.length)throw Error('Arquivo sem linhas');let supplier=$('supplier').value.trim()||'Não identificado';rows.forEach(o=>o.__supplier=field(o,['importadora','fornecedor','supplier'])||supplier);let combined=[...offers,...rows];await save('offers',combined);offers=combined;$('offer-status').textContent=rows.length+' ofertas adicionadas. Total: '+offers.length;render()}catch(err){alert('Erro ao importar ofertas: '+err.message)}});
+function exportCSV(){let lines=[['empresa','vinho','importadora','custo_oferta','cartao_sugerido','pix_base','correspondencia']];for(let o of offersFiltered()){let c=offerCost(o);lines.push([companyName(),wineName(o),o.__supplier,Number.isFinite(c)?c:'',Number.isFinite(c)?(c*1.6+20).toFixed(2):'',Number.isFinite(c)?((c*1.6+20)*.9).toFixed(2):'',exactMatch(o)?'nome_compatível_revisar':'sem_correspondencia_exata'])}let csv='\uFEFF'+lines.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');let blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='radar_'+active+'_analise.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+load();
+</script></body></html>
